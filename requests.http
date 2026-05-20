@@ -1,0 +1,309 @@
+@baseUrl = https://localhost:8080
+@adminUsername = admin
+@adminPassword = Strong#123
+@userUsername = user
+@userPassword = Strong#456
+@csrf = replace-with-token-from-api-auth-csrf
+@accessToken = paste-access-token-from-login-or-refresh
+@refreshToken = paste-current-refresh-token
+@oldRefreshToken = paste-previous-refresh-token-after-refresh
+
+### AUTH: register first user, first registered user becomes ADMIN
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{adminUsername}}",
+  "email": "admin@example.com",
+  "password": "{{adminPassword}}"
+}
+
+### AUTH: register regular USER
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{userUsername}}",
+  "email": "user@example.com",
+  "password": "{{userPassword}}"
+}
+
+### AUTH: login and get access + refresh token pair
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{adminUsername}}",
+  "password": "{{adminPassword}}"
+}
+
+### AUTH: refresh token pair, then move old refresh token to oldRefreshToken
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### AUTH: old refresh token must fail with 401
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{oldRefreshToken}}"
+}
+
+### AUTH: get CSRF token
+GET {{baseUrl}}/api/auth/csrf
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### PROJECT CRUD: get all projects with JWT access token
+GET {{baseUrl}}/api/projects
+Authorization: Bearer {{accessToken}}
+
+### PROJECT CRUD: get all projects with Basic Auth
+GET {{baseUrl}}/api/projects
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### PROJECT CRUD: create project
+POST {{baseUrl}}/api/projects
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "name": "Mobile App",
+  "description": "Tasks for mobile client"
+}
+
+### PROJECT CRUD: get project by id
+GET {{baseUrl}}/api/projects/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### PROJECT CRUD: update project
+PUT {{baseUrl}}/api/projects/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "name": "RBPO Labs",
+  "description": "Updated laboratory task tracking project"
+}
+
+### PROJECT CRUD: delete project
+DELETE {{baseUrl}}/api/projects/3
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### USER CRUD: get all users
+GET {{baseUrl}}/api/users
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### USER CRUD: create user as ADMIN
+POST {{baseUrl}}/api/users
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "username": "sergey",
+  "email": "sergey@example.com",
+  "password": "Strong#789"
+}
+
+### USER CRUD: get user by id
+GET {{baseUrl}}/api/users/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### USER CRUD: update user and role as ADMIN
+PUT {{baseUrl}}/api/users/2
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "username": "user",
+  "email": "user@example.com",
+  "role": "MANAGER"
+}
+
+### USER CRUD: delete user
+DELETE {{baseUrl}}/api/users/3
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### TAG CRUD: get all tags
+GET {{baseUrl}}/api/tags
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### TAG CRUD: create tag
+POST {{baseUrl}}/api/tags
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "name": "review",
+  "color": "#9333EA"
+}
+
+### TAG CRUD: get tag by id
+GET {{baseUrl}}/api/tags/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### TAG CRUD: update tag
+PUT {{baseUrl}}/api/tags/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "name": "backend",
+  "color": "#1D4ED8"
+}
+
+### TAG CRUD: delete tag
+DELETE {{baseUrl}}/api/tags/4
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### TASK CRUD: get all tasks
+GET {{baseUrl}}/api/tasks
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### TASK CRUD: create task
+POST {{baseUrl}}/api/tasks
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "title": "Check API collection",
+  "description": "Run all HTTP requests from requests.http",
+  "status": "OPEN",
+  "projectId": 1,
+  "userId": 1,
+  "tagIds": [1]
+}
+
+### TASK CRUD: get task by id
+GET {{baseUrl}}/api/tasks/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### TASK CRUD: update task
+PUT {{baseUrl}}/api/tasks/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "title": "Check API collection",
+  "description": "Updated task text",
+  "status": "OPEN",
+  "projectId": 1,
+  "userId": 1,
+  "tagIds": [1, 2]
+}
+
+### TASK CRUD: delete task
+DELETE {{baseUrl}}/api/tasks/3
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### COMMENT CRUD: get all comments
+GET {{baseUrl}}/api/comments
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### COMMENT CRUD: create comment
+POST {{baseUrl}}/api/comments
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "taskId": 1,
+  "userId": 1,
+  "content": "CRUD comment created from request collection"
+}
+
+### COMMENT CRUD: get comment by id
+GET {{baseUrl}}/api/comments/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### COMMENT CRUD: update comment
+PUT {{baseUrl}}/api/comments/1
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "taskId": 1,
+  "userId": 1,
+  "content": "Updated comment text"
+}
+
+### COMMENT CRUD: delete comment
+DELETE {{baseUrl}}/api/comments/2
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### BUSINESS 1: assign task to user
+PATCH {{baseUrl}}/api/operations/tasks/1/assign/2
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### BUSINESS 2: add tag to task
+POST {{baseUrl}}/api/operations/tasks/1/tags/2
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### BUSINESS 3: remove tag from task
+DELETE {{baseUrl}}/api/operations/tasks/1/tags/2
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+
+### BUSINESS 4: change task status with allowed transition
+PATCH {{baseUrl}}/api/operations/tasks/1/status
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS"
+}
+
+### BUSINESS 5: add comment to task
+POST {{baseUrl}}/api/operations/tasks/1/comments
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+X-XSRF-TOKEN: {{csrf}}
+Cookie: XSRF-TOKEN={{csrf}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "content": "Business operation comment"
+}
+
+### BUSINESS 6: get project task summary
+GET {{baseUrl}}/api/operations/projects/1/summary
+Authorization: Basic {{adminUsername}} {{adminPassword}}
