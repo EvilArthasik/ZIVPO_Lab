@@ -336,3 +336,112 @@ ER-диаграмма описывает данные: сущности, атр�
 - задача может иметь много комментариев
 - пользователь может написать много комментариев
 - задачи и теги связаны отношением многие-ко-многим через `task_tags`
+
+## Лабораторная работа 2: API лицензий
+
+В проект добавлена модель данных PostgreSQL/JPA и REST-операции для управления лицензиями.
+
+### Таблицы и связи
+
+- `licenses` хранит ключ лицензии, пользователя, статус, дату активации, дату истечения, флаг блокировки, срок действия и лимит устройств.
+- `devices` хранит клиентские устройства по нормализованному идентификатору устройства.
+- `device_licenses` связывает лицензии и устройства, а также хранит дату активации. Пара `(license_id, device_id)` уникальна.
+- `license_history` хранит историю операций с лицензией: `CREATED`, `ACTIVATED`, `CHECKED`, `RENEWED`.
+- `licenses.user_id` ссылается на `app_users.id`.
+- `licenses.device_id` ссылается на `devices.id`.
+- `device_licenses.license_id` ссылается на `licenses.id`.
+- `device_licenses.device_id` ссылается на `devices.id`.
+- `license_history.license_id` ссылается на `licenses.id`.
+
+### Endpoints лицензий
+
+Создание лицензии. Требуется роль `MANAGER` или `ADMIN`.
+
+```http
+POST /api/licenses
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+```
+
+```json
+{
+  "userId": 1,
+  "durationDays": 30,
+  "deviceLimit": 1
+}
+```
+
+Активация лицензии на устройстве.
+
+```http
+POST /api/licenses/activate
+Content-Type: application/json
+```
+
+```json
+{
+  "licenseKey": "LIC-...",
+  "deviceFingerprint": "AA-BB-CC-01",
+  "deviceName": "Developer laptop"
+}
+```
+
+Проверка лицензии на активированном устройстве.
+
+```http
+POST /api/licenses/check
+Content-Type: application/json
+```
+
+```json
+{
+  "licenseKey": "LIC-...",
+  "deviceFingerprint": "AA-BB-CC-01"
+}
+```
+
+Продление лицензии. Требуется роль `MANAGER` или `ADMIN`.
+
+```http
+POST /api/licenses/{licenseKey}/renew
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+```
+
+```json
+{
+  "additionalDays": 15
+}
+```
+
+### Ответ TicketResponse
+
+Операции активации, проверки и продления возвращают `TicketResponse`.
+
+```json
+{
+  "ticket": {
+    "serverDate": "2026-05-20T21:00:00",
+    "ticketTtlSeconds": 300,
+    "licenseActivatedAt": "2026-05-20T21:00:00",
+    "licenseExpiresAt": "2026-06-19T21:00:00",
+    "userId": 1,
+    "deviceId": 1,
+    "blocked": false
+  },
+  "signature": "base64url-signature"
+}
+```
+
+Если настроен SSL keystore, тикет подписывается алгоритмом `SHA256withRSA` приватным ключом из keystore. Если keystore не настроен, для локальных тестов используется fallback HMAC-SHA256 на основе `jwt.secret`.
+
+### Порядок проверки в Postman
+
+1. Зарегистрировать первого пользователя через `POST /api/auth/register`.
+2. Выполнить вход через `POST /api/auth/login` и скопировать `accessToken`.
+3. Создать лицензию через `POST /api/licenses`.
+4. Скопировать `licenseKey` из ответа.
+5. Активировать лицензию через `POST /api/licenses/activate`.
+6. Проверить лицензию через `POST /api/licenses/check`.
+7. Продлить лицензию через `POST /api/licenses/{licenseKey}/renew`.
+8. Попробовать активировать второе устройство при `deviceLimit = 1`; API должен вернуть ошибку `Device limit reached`.

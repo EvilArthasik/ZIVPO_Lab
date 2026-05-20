@@ -7,6 +7,8 @@
 @accessToken = paste-access-token-from-login-or-refresh
 @refreshToken = paste-current-refresh-token
 @oldRefreshToken = paste-previous-refresh-token-after-refresh
+@licenseKey = paste-created-license-key
+@deviceFingerprint = device-demo-001
 
 ### AUTH: register first user, first registered user becomes ADMIN
 POST {{baseUrl}}/api/auth/register
@@ -138,6 +140,45 @@ DELETE {{baseUrl}}/api/users/3
 Authorization: Basic {{adminUsername}} {{adminPassword}}
 X-XSRF-TOKEN: {{csrf}}
 Cookie: XSRF-TOKEN={{csrf}}
+
+### LICENSE: create license for user
+POST {{baseUrl}}/api/licenses
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "durationDays": 30,
+  "deviceLimit": 1
+}
+
+### LICENSE: activate license on device, returns TicketResponse
+POST {{baseUrl}}/api/licenses/activate
+Content-Type: application/json
+
+{
+  "licenseKey": "{{licenseKey}}",
+  "deviceFingerprint": "{{deviceFingerprint}}",
+  "deviceName": "Developer laptop"
+}
+
+### LICENSE: check license on activated device
+POST {{baseUrl}}/api/licenses/check
+Content-Type: application/json
+
+{
+  "licenseKey": "{{licenseKey}}",
+  "deviceFingerprint": "{{deviceFingerprint}}"
+}
+
+### LICENSE: renew license
+POST {{baseUrl}}/api/licenses/{{licenseKey}}/renew
+Authorization: Basic {{adminUsername}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "additionalDays": 15
+}
 
 ### TAG CRUD: get all tags
 GET {{baseUrl}}/api/tags
