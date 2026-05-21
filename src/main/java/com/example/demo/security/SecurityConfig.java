@@ -61,6 +61,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/licenses/*/renew").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/licenses/**").hasAnyRole("MANAGER", "ADMIN")
 
+                        .requestMatchers(HttpMethod.GET, "/api/signatures", "/api/signatures/increment").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/signatures/by-ids").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/signatures").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/signatures/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/signatures/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/signatures/*/history", "/api/signatures/*/audit").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/api/operations/projects/*/summary").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/operations/tasks/*/comments").authenticated()
                         .requestMatchers("/api/operations/**").hasAnyRole("MANAGER", "ADMIN")

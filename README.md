@@ -464,3 +464,40 @@ powershell -ExecutionPolicy Bypass -File scripts\generate-signing-keystore.ps1 -
 6. Проверить лицензию через `POST /api/licenses/check`.
 7. Продлить лицензию через `POST /api/licenses/{licenseKey}/renew`.
 8. Попробовать активировать второе устройство при `deviceLimit = 1`; API должен вернуть ошибку `Device limit reached`.
+
+## Лабораторная работа 4: антивирусные сигнатуры
+
+Добавлен модуль управления антивирусными сигнатурами. Используются таблицы `signatures`, `signatures_history` и `signatures_audit`; история и аудит связаны с основной сигнатурой по `signature_id`.
+
+Основные операции:
+
+- `POST /api/signatures` - создать сигнатуру, доступно `ADMIN`.
+- `PUT /api/signatures/{id}` - обновить сигнатуру, доступно `ADMIN`.
+- `DELETE /api/signatures/{id}` - логически удалить сигнатуру, доступно `ADMIN`.
+- `GET /api/signatures` - получить полную базу без `DELETED`.
+- `GET /api/signatures/increment?since=2026-05-21T00:00:00Z` - получить инкремент, включая `DELETED`.
+- `POST /api/signatures/by-ids` - получить сигнатуры по списку UUID.
+- `GET /api/signatures/{id}/history` - получить историю сигнатуры.
+- `GET /api/signatures/{id}/audit` - получить аудит сигнатуры.
+
+Подпись формируется через `DigitalSignatureService`. При `create` и `update` подпись пересчитывается, при `update` и `delete` сохраняется предыдущая версия в history, а `create/update/delete` пишут запись в audit.
+
+Пример тела запроса:
+
+```json
+{
+  "threatName": "Trojan.Sample",
+  "firstBytesHex": "4D5A",
+  "remainderHashHex": "AABBCCDD",
+  "remainderLength": 4,
+  "fileType": "exe",
+  "offsetStart": 0,
+  "offsetEnd": 12
+}
+```
+
+Проверка:
+
+```powershell
+.\mvnw.cmd test
+```
