@@ -429,11 +429,30 @@ Content-Type: application/json
     "deviceId": 1,
     "blocked": false
   },
-  "signature": "base64url-signature"
+  "signature": "base64-signature"
 }
 ```
 
-Если настроен SSL keystore, тикет подписывается алгоритмом `SHA256withRSA` приватным ключом из keystore. Если keystore не настроен, для локальных тестов используется fallback HMAC-SHA256 на основе `jwt.secret`.
+Тикет подписывается модулем ЭЦП алгоритмом `SHA256withRSA`. Перед подписанием объект `ticket` приводится к каноническому JSON, затем подпись кодируется в Base64.
+
+Настройки ЭЦП:
+
+```properties
+signature.key-store-path=${SIGNATURE_KEY_STORE_PATH}
+signature.key-store-password=${SIGNATURE_KEY_STORE_PASSWORD}
+signature.key-store-type=${SIGNATURE_KEY_STORE_TYPE:PKCS12}
+signature.key-alias=${SIGNATURE_KEY_ALIAS:ticket-signing}
+signature.key-password=${SIGNATURE_KEY_PASSWORD}
+signature.algorithm=${SIGNATURE_ALGORITHM:SHA256withRSA}
+```
+
+Локальное хранилище и публичный сертификат можно создать командой:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\generate-signing-keystore.ps1 -Alias ticket-signing -StorePath certs/local/ticket-signing.p12 -CertificatePath certs/local/ticket-signing.cer -StorePassword changeit -KeyPassword changeit
+```
+
+Для CI/CD keystore хранится в GitHub Secrets: `SIGNATURE_KEYSTORE_BASE64`, `SIGNATURE_KEYSTORE_PASSWORD`, `SIGNATURE_KEY_PASSWORD`, `SIGNATURE_KEY_ALIAS`.
 
 ### Порядок проверки в Postman
 

@@ -5,6 +5,7 @@ certs/
 *.jks
 *.p12
 *.pfx
+!src/test/resources/signing-test.p12
 *.key
 *.csr
 *.crt
