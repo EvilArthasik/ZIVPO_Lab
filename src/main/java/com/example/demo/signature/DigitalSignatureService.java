@@ -22,11 +22,23 @@ public class DigitalSignatureService {
     }
 
     public String sign(Object payload) {
+        return Base64.getEncoder().encodeToString(signBytes(canonicalizer.canonicalBytes(payload)));
+    }
+
+    public String signManifest(byte[] manifestBytes) {
+        return Base64.getEncoder().encodeToString(signBytes(manifestBytes));
+    }
+
+    public String algorithm() {
+        return properties.getAlgorithm();
+    }
+
+    private byte[] signBytes(byte[] bytes) {
         try {
             Signature signature = Signature.getInstance(properties.getAlgorithm());
             signature.initSign(keyProvider.getPrivateKey());
-            signature.update(canonicalizer.canonicalBytes(payload));
-            return Base64.getEncoder().encodeToString(signature.sign());
+            signature.update(bytes);
+            return signature.sign();
         } catch (SignatureException exception) {
             throw exception;
         } catch (Exception exception) {

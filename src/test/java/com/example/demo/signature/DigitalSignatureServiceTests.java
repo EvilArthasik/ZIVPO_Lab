@@ -20,6 +20,9 @@ class DigitalSignatureServiceTests {
     @Autowired
     private DigitalSignatureService digitalSignatureService;
 
+    @Autowired
+    private SignatureKeyProvider signatureKeyProvider;
+
     @Test
     void canonicalizationSortsObjectFieldsAndUsesUtf8Json() {
         Map<String, Object> payload = new LinkedHashMap<>();
@@ -50,5 +53,19 @@ class DigitalSignatureServiceTests {
 
         assertThat(Base64.getDecoder().decode(signature)).hasSize(256);
         assertThat(digitalSignatureService.verify(ticket, signature)).isTrue();
+    }
+
+    @Test
+    void signsManifestBytesWithoutJsonCanonicalization() throws Exception {
+        byte[] manifest = new byte[] {'Z', 'S', 'G', 'M', 0, 0, 0, 1};
+
+        String signature = digitalSignatureService.signManifest(manifest);
+        byte[] signatureBytes = Base64.getDecoder().decode(signature);
+
+        java.security.Signature verifier = java.security.Signature.getInstance(digitalSignatureService.algorithm());
+        verifier.initVerify(signatureKeyProvider.getPublicKey());
+        verifier.update(manifest);
+        assertThat(signatureBytes).hasSize(256);
+        assertThat(verifier.verify(signatureBytes)).isTrue();
     }
 }

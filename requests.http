@@ -348,3 +348,25 @@ Content-Type: application/json
 ### BUSINESS 6: get project task summary
 GET {{baseUrl}}/api/operations/projects/1/summary
 Authorization: Basic {{adminUsername}} {{adminPassword}}
+
+### SIGNATURES: get full database as multipart/mixed binary package
+GET {{baseUrl}}/api/signatures/binary
+Authorization: Basic {{userUsername}} {{userPassword}}
+Accept: multipart/mixed
+
+### SIGNATURES: get increment as multipart/mixed binary package
+GET {{baseUrl}}/api/signatures/binary/increment?since=2026-05-21T00:00:00Z
+Authorization: Basic {{userUsername}} {{userPassword}}
+Accept: multipart/mixed
+
+### SIGNATURES: get selected signatures as multipart/mixed binary package
+POST {{baseUrl}}/api/signatures/binary/by-ids
+Authorization: Basic {{userUsername}} {{userPassword}}
+Accept: multipart/mixed
+Content-Type: application/json
+
+{
+  "ids": [
+    "paste-signature-uuid"
+  ]
+}

@@ -501,3 +501,41 @@ powershell -ExecutionPolicy Bypass -File scripts\generate-signing-keystore.ps1 -
 ```powershell
 .\mvnw.cmd test
 ```
+
+## Лабораторная работа 5: бинарный API сигнатур
+
+Добавлен бинарный API выдачи антивирусных сигнатур клиенту. JSON API из лабораторной работы 4 сохранён без изменений, а бинарные ответы доступны как `multipart/mixed`:
+
+- `GET /api/signatures/binary` - полная актуальная база сигнатур.
+- `GET /api/signatures/binary/increment?since=2026-05-21T00:00:00Z` - инкремент, включая удалённые сигнатуры.
+- `POST /api/signatures/binary/by-ids` - выдача выбранных сигнатур по UUID.
+
+Multipart-ответ содержит три части:
+
+- `manifest.bin` с типом `application/vnd.zivpo.signature-manifest+octet-stream`.
+- `manifest.sig` с типом `application/vnd.zivpo.signature-manifest-signature`.
+- `signatures.bin` с типом `application/vnd.zivpo.signatures+octet-stream`.
+
+Все числовые поля записываются через `DataOutputStream` в big-endian-порядке. Строки приводятся к UTF-8 и записываются как `int32 length` + байты. Бинарные поля записываются как `int32 length` + байты. UUID записывается двумя `int64`: most significant bits и least significant bits. `Instant` записывается как `int64` миллисекунд Unix epoch.
+
+`signatures.bin`:
+
+```text
+magic bytes[4] = ZSGD
+version int32 = 1
+count int32
+records[count]:
+  id uuid
+  threatName utf8
+  firstBytes bytes
+  remainderHash bytes
+  remainderLength int64
+  fileType utf8
+  offsetStart int64
+  offsetEnd int64
+  updatedAt instantMillis
+  status int8: ACTUAL=1, DELETED=2
+  digitalSignature bytes
+```
+
+`manifest.bin` начинается с `ZSGM`, содержит версию формата, тип выборки (`FULL`, `INCREMENT`, `BY_IDS`), время генерации, количество записей, имя и MIME-тип файла данных, длину `signatures.bin`, SHA-256 от данных, алгоритм подписи и бинарное описание схемы. Манифест подписывается новым методом `DigitalSignatureService.signManifest(byte[])`; подпись возвращается отдельной multipart-частью `manifest.sig`.
